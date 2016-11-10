@@ -10,7 +10,7 @@ import xml.etree.ElementTree as ET
 '''--------------'''
 image_folder = './images/'
 rect_folder = './Annotation/n13926786/'
-img_scale = 2
+img_scale = 1
 '''--------------'''
 
 
@@ -28,11 +28,21 @@ def make_train_data(ids):
 
         # 矩形をdlib.rectangle形式でリスト化
         img_rect = []
+        # print(image_path)
         for bndbox in root.iter('bndbox'):
             left, top, right, bottom = map(lambda x: int(int(x.text) * img_scale), bndbox)
             # print(left, top, right, bottom)
             # print(right - left, bottom - top)
-            img_rect.append(dlib.rectangle(left, top, right, bottom))
+            if not (0.9 < (right - left) / (bottom - top) < 1.1):
+                # print('skip', right - left, bottom - top)
+                continue
+            print(right - left, bottom - top)
+            w = right - left
+            if w >= 200:
+                continue
+            img_rect.append(dlib.rectangle(left, top, left + w, top + w))
+            print('->', left, top, left + w, top + w)
+            # img_rect.append(dlib.rectangle(left, top, right, bottom))
 
         # boxesに矩形リストをtupleにして追加
         # imagesにファイル情報を追加
@@ -54,11 +64,13 @@ def training(boxes, images):
     # 学習途中の出力をするかどうか
     options.be_verbose = True
     # 停止許容範囲
-    options.epsilon = 0.001
+    # options.epsilon = 0.001
+    options.epsilon = 0.01
     # サンプルを増やす最大数(大きすぎるとメモリを使う)
-    options.upsample_limit = 8
+    options.upsample_limit = 1
     # 矩形検出の最小窓サイズ(80*80=6400となる)
     options.detection_window_size = 6400
+    # options.detection_window_size = 100
 
     # 学習してsvmファイルを保存
     print('train...')
