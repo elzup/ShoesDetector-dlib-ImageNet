@@ -38,36 +38,28 @@ def get_rect(rect_file):
     return rect_list
 
 
-def make_train_data(rect_list):
+def make_train_data(ids):
     u"""矩形リストから学習用データを生成する."""
     boxes = []
     images = []
-    for i, x in enumerate(rect_list):
 
-        # TODO(vaaaaanquish):CSVかjsonにしたいなあ
-        # 改行と空白を除去してリスト化
-        x = x.replace('\n', '')
-        x = x.replace('\r', '')
-        one_data = x.split(' ')
-        # 矩形の数k
-        k = len(one_data) / 4
+    for id in ids:
+        rect_path = rect_folder + id + '.xml'
+        image_path = image_folder + id + '.jpg'
+        if not os.path.isfile(image_path) or not os.path.isfile(rect_path):
+            continue
+        root = ET.parse(rect_path).getroot()
 
         # 矩形をdlib.rectangle形式でリスト化
         img_rect = []
-        for j in range(k):
-            left = int(one_data[j*4])
-            top = int(one_data[j*4+1])
-            right = int(one_data[j*4+2])
-            bottom = int(one_data[j*4+3])
+        for bndbox in root.iter('bndbox'):
+            left, top, right, bottom = map(lambda x: int(x.text), bndbox)
             img_rect.append(dlib.rectangle(left, top, right, bottom))
 
         # boxesに矩形リストをtupleにして追加
         # imagesにファイル情報を追加
-        f_path = image_folder + one_data[k*4] + '.jpg'
-        if os.path.exists(f_path):
-            boxes.append(tuple(img_rect))
-            images.append(io.imread(f_path))
-
+        boxes.append(tuple(img_rect))
+        images.append(io.imread(image_path))
     return boxes, images
 
 
@@ -97,20 +89,11 @@ def training(boxes, images):
 
 if __name__ == '__main__':
     ids = list(map(lambda s: os.path.splitext(s)[0], os.listdir(rect_folder)))
-    for id in ids:
-        rect_path = rect_folder + id + '.xml'
-        image_path = image_folder + id + '.jpg'
-        if not os.path.isfile(image_path) or not os.path.isfile(rect_path):
-            continue
-        tree = ET.parse(rect_path)
-        root = tree.getroot()
-        for bndbox in root.iter('bndbox'):
-            print(list(bndbox))
-        break
 
     # # 矩形情報を取ってくる
     # rect_list = get_rect(rect_file)
     # # 学習用データを作る
-    # boxes, images = make_train_data(rect_list)
+    boxes, images = make_train_data(ids)
+    print(boxes)
     # # 学習する
     # training(boxes, images)
