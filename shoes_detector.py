@@ -21,12 +21,14 @@ images = [io.imread(faces_folder + '/xxxxxx.jpg'),
 import dlib
 import os
 from skimage import io
+from skimage.transform import rescale
 import xml.etree.ElementTree as ET
 
 '''--------------'''
 image_folder = './images/'
 rect_folder = './Annotation/n13926786/'
 rect_file = './true_rect.txt'
+img_scale = 2
 '''--------------'''
 
 
@@ -54,12 +56,14 @@ def make_train_data(ids):
         img_rect = []
         for bndbox in root.iter('bndbox'):
             left, top, right, bottom = map(lambda x: int(x.text), bndbox)
+            left, top, right, bottom = map(lambda x: int(int(x.text) * img_scale), bndbox)
             img_rect.append(dlib.rectangle(left, top, right, bottom))
 
         # boxesに矩形リストをtupleにして追加
         # imagesにファイル情報を追加
         boxes.append(tuple(img_rect))
         images.append(io.imread(image_path))
+        images.append(rescale(io.imread(image_path), img_scale))
     return boxes, images
 
 
