@@ -1,6 +1,11 @@
 Annotation/
 images/
 
-
 mapping.txt
 bbox.tar.gz
+
+detector.svm
+
+rect.txt
+source.jpg
+output_source.jpg
