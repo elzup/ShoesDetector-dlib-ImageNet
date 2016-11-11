@@ -9,3 +9,6 @@ detector.svm
 rect.txt
 source.jpg
 output_source.jpg
+
+can_images/
+entrance_images/
